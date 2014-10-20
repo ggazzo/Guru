@@ -1,8 +1,8 @@
 PARSER_BEGIN(GuruCParser)
-
+package com.guru.language;
 import java.util.*;
-import generator.*;
-
+import generator.*; 
+  
   public class GuruCParser{
 	private static Classes classes = new Classes();
 
@@ -144,7 +144,7 @@ TOKEN : {
 	<XOR: "xor"> |
 	<NOT: "not"> |
 	<CASE: "case"> |
-	<LONG: "long"> |
+//	<LONG: "long"> |
 	<ENUM: "enum"> |
 	<AUTO: "auto"> |
 	<VOID: "void"> |

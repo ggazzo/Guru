@@ -30,7 +30,7 @@ public class Guru {
                   // match path name extension
                   if(str.equals(".guru"))
                   {	
-                	  p[0] =  dir.getAbsolutePath()+"/"+name;
+                	  p[0] =  dir.getPath()+"/"+name;
                 	 GuruCParser.main(p);
                      return true;
                   }

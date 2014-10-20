@@ -1,4 +1,4 @@
-package generator;
+package com.guru.generator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class ClassBuilder {
 		File f = new File("./src-gen/"+this.nameClass+".c");
 		FileWriter fw = new FileWriter(f);
 		f.createNewFile();
-		
+		System.out.println("criado o arquivo:" + f.getName());
 		write(fw, "#include %class%.h");
 		
 		
@@ -70,7 +70,7 @@ public class ClassBuilder {
 		File f = new File("./src-gen/"+this.nameClass+".h");
 		
 		f.createNewFile();
-		
+		System.out.println("criado o arquivo:" + f.getName());
 		
 		FileWriter fw = new FileWriter(f);
 	

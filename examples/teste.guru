@@ -18,8 +18,7 @@ Sensor {
       Faz tudo
     */
     exec {
-      long duration = 0;
-      long distance = 0;
+      long duration, distance;
       int vibracao = 0;
 
       toogleDelay(10);

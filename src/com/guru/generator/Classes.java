@@ -1,4 +1,4 @@
-package generator;
+package com.guru.generator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;

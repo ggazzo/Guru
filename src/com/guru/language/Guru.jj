@@ -1,7 +1,7 @@
 PARSER_BEGIN(GuruCParser)
 package com.guru.language;
 import java.util.*;
-import generator.*; 
+import com.guru.generator.*; 
   
   public class GuruCParser{
 	private static Classes classes = new Classes();
@@ -64,7 +64,7 @@ import generator.*;
       }
       try {
         parser.TranslationUnit();
-        System.out.println("Guru Parser .1:  Java program parsed successfully.");
+        //System.out.println("Guru Parser .1:  Java program parsed successfully.");
         classes.build();
       }
       catch(ParseException e){
@@ -222,9 +222,8 @@ void CompoundStatement() : {}
 void Statement() : {}
 {
   
-LOOKAHEAD(3) 
-	Expression() ";"
-| LOOKAHEAD(3)	Variable() Variable() "=" Expression() ";"
+	LOOKAHEAD(2) Expression() ";"
+| 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
 |  	Variable() "=" Expression() ";"
 | 	SelectionStatement()
 | 	IterationStatement()

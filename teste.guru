@@ -1,0 +1,39 @@
+Sensor {
+  int status, trig, echo;
+  int aaa;
+  (){}
+  (int a){}  
+  exec {
+  }
+  int exec {
+  	
+  	int a = c;
+  	
+   
+  	a++;
+  	teste(a);
+  	if(a++){
+  		a = c.teste(a) + 1;
+  	}
+  	  	teste(.a);
+  	while(a == (c - b) ){
+
+  	}
+  	
+  	int a = c;
+  	
+  	if(a == a){
+  		b = a;
+  	}elseif(bunda){
+  		b = a;
+  	}else {
+  		b = a;
+  	}
+  }
+  int exec (int a){
+  
+  }   
+}
+
+Teste {
+}

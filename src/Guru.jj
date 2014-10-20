@@ -1,0 +1,424 @@
+PARSER_BEGIN(GuruCParser)
+
+import java.util.*;
+import generator.*;
+
+  public class GuruCParser{
+	private static Classes classes = new Classes();
+
+    // Hastable for storing typedef types
+    private static Set types = new HashSet();
+
+    // Stack for determining when the parser 
+    // is parsing a typdef definition.
+    private static Stack typedefParsingStack = new Stack();
+
+    // Returns true if the given string is
+    // a typedef type.
+    private static boolean isType(String type){
+   	  return types.contains(type);
+    }
+
+    // Add a typedef type to those already defined
+    private static void addType(String type){
+   	  types.add(type);
+    }
+
+    // Prints out all the types used in parsing the c source
+    private static void printTypes(){
+      for (Iterator i = types.iterator(); i.hasNext();) {
+        System.out.println(i.next());
+      }
+    }
+
+    // Run the parser
+    public static void main ( String args [ ] ) {
+      GuruCParser parser ;
+
+  	  // Hack to include type "special types"
+	    types.add("__signed__");
+	    types.add("__const");
+	    types.add("__inline__");
+	    types.add("__signed");
+
+      if(args.length == 0){
+        System.out.println("Guru Parser .1:  Reading from standard input . . .");
+        parser = new GuruCParser(System.in);
+      }
+      else if(args.length == 1){
+        System.out.println("Guru Parser .1:  Reading from file " + args[0] + " . . ." );
+      try {
+        parser = new GuruCParser(new java.io.FileInputStream(args[0]));
+      }
+      catch(java.io.FileNotFoundException e){
+        System.out.println("C Parser Version 0.1:  File " + args[0] + " not found.");
+        return ;
+        }
+      }
+      else {
+        System.out.println("Guru Parser .1:  Usage is one of:");
+        System.out.println("         java CParser < inputfile");
+        System.out.println("OR");
+        System.out.println("         java CParser inputfile");
+        return ;
+      }
+      try {
+        parser.TranslationUnit();
+        System.out.println("Guru Parser .1:  Java program parsed successfully.");
+        classes.build();
+      }
+      catch(ParseException e){
+        System.out.println("Guru Parser .1:  Encountered errors during parse.");
+        e.printStackTrace();
+      }
+    }
+  }
+
+PARSER_END(GuruCParser)
+
+SKIP : {
+ " "
+|  "\t"
+|  "\n"
+|  "\r"
+|  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+|  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
+| "#" : PREPROCESSOR_OUTPUT
+}
+
+
+<PREPROCESSOR_OUTPUT> SKIP:
+{
+     "\n" : DEFAULT
+}
+
+<PREPROCESSOR_OUTPUT> MORE:
+{
+ "\\\n"
+ |
+ "\\\r\n"
+ |
+ < ~[] >
+}
+
+
+
+TOKEN : {
+ <INTEGER_LITERAL: <DECIMAL_LITERAL> (["l","L"])? | <HEX_LITERAL> (["l","L"])? | <OCTAL_LITERAL> (["l","L"])?>
+|  <#DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])*>
+|  <#HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+>
+|  <#OCTAL_LITERAL: "0" (["0"-"7"])*>
+|  <FLOATING_POINT_LITERAL: (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])? | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])? | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])? | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]>
+|  <#EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+>
+|  <CHARACTER_LITERAL: "\'" (~["\'","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"])) "\'">
+|  <STRING_LITERAL: "\"" ( ~["\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "\"">
+}
+
+TOKEN : {
+	<CONTINUE: "continue"> |
+	<VOLATILE: "volatile"> |
+	<REGISTER: "register"> |
+	<UNSIGNED: "unsigned"> |
+	<TYPEDEF: "typedef"> |
+	<DFLT: "default"> |
+	<DOUBLE: "double"> |
+	<SIZEOF: "sizeof"> |
+	<SWITCH: "switch"> |
+	<RETURN: "return"> |
+	<EXTERN: "extern"> |
+	<STRUCT: "struct"> |
+	<STATIC: "static"> |
+	<SIGNED: "signed"> |
+	<WHILE: "while"> |
+	<BREAK: "break"> |
+	<UNION: "union"> |
+	<CONST: "const"> |
+	<FLOAT: "float"> |
+	<SHORT: "short"> |
+	<IF: "if"> |
+	<INSTANCEOF: "instanceof" >|
+	<ELSE: "else"> |
+	<ELSEIF: "elseif"> |
+	<AND: "and"> |
+	<OR: "or"> |
+	<XOR: "xor"> |
+	<NOT: "not"> |
+	<CASE: "case"> |
+	<LONG: "long"> |
+	<ENUM: "enum"> |
+	<AUTO: "auto"> |
+	<VOID: "void"> |
+	<CHAR: "char"> |
+	<GOTO: "goto"> |
+	<FOR: "for"> |
+//	<INT: "int"> |
+	
+	<DO: "do"> |
+	<EXTENDS : "extends" >
+}
+
+TOKEN : {
+ <IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)*>
+|  <#LETTER: ["$","A"-"Z","_","a"-"z"]>
+|  <#DIGIT: ["0"-"9"]>
+}
+
+void TranslationUnit() : {}
+{	(	  ClassDeclaration() // procura classes (:
+	)*
+}
+
+
+
+void ClassDeclaration() : {Token t;}
+{
+	[t = <IDENTIFIER>{
+	  classes.addClass(t.toString());
+	}] [<EXTENDS> <IDENTIFIER> ( "," <IDENTIFIER>) * ] ClassMembers()
+}
+void ClassMembers() : {}
+{
+	"{" (MemberDeclaration() )* "}"
+}
+void MemberDeclaration() : {}
+{
+  /*
+	attributos
+	metodos
+  */
+LOOKAHEAD(attributos())
+	attributos()
+| 	metodos()
+| 	construtores()
+}
+
+void construtores():{}{
+  LOOKAHEAD(2)
+  "("")""{"(Statement())*"}"
+| "("Parametros()")""{"(Statement())*"}"}
+
+void metodos():{}{
+  LOOKAHEAD(metodos_com_parametros())
+ 	metodos_com_parametros()
+| 	metodos_sem_parametros()}
+
+void metodos_com_parametros():{}
+{
+  LOOKAHEAD(2)
+  <IDENTIFIER> "("Parametros()")" "{"(Statement())*"}"
+| <IDENTIFIER> <IDENTIFIER> "("Parametros()")""{"(Statement())*"}"}
+void metodos_sem_parametros():{}{
+  LOOKAHEAD(2)
+  <IDENTIFIER> "{"(Statement())*"}"
+| <IDENTIFIER> <IDENTIFIER> CompoundStatement()
+  }
+
+void CompoundStatement() : {}
+{
+	"{"
+	    ( Statement())*
+	"}"
+}
+void Statement() : {}
+{
+  
+LOOKAHEAD(3) 
+	Expression() ";"
+| LOOKAHEAD(3)	Variable() Variable() "=" Expression() ";"
+|  	Variable() "=" Expression() ";"
+| 	SelectionStatement()
+| 	IterationStatement()
+
+
+ /*	LOOKAHEAD(2) LabeledStatement() |
+	LOOKAHEAD(2) ClassDeclaration() |
+	LOOKAHEAD(2) InterfaceDeclaration() |
+	LOOKAHEAD(2) ExpressionStatement() |
+	CompoundStatement() |
+	SelectionStatement() |
+	IterationStatement() |
+	JumpStatement() |
+	IncludeStatement() |
+	EchoStatement() |
+	DefineStatement() |
+	MemberDeclaration()
+|	ThrowStatement()
+| 	TryBlock()
+|	EndOfStatement()*/
+}
+
+void SelectionStatement() : {}
+{
+	<IF> "(" Expression() ")" CompoundStatement() ( LOOKAHEAD(2) <ELSEIF> "(" Expression() ")" CompoundStatement() )* [ LOOKAHEAD(2) <ELSE> CompoundStatement() ] |
+	<SWITCH> "(" Expression() ")" CompoundStatement()  
+}
+void IterationStatement() : {}
+{
+	<WHILE> "(" Expression() ")" CompoundStatement() |
+	<DO> CompoundStatement() <WHILE> "(" Expression() ")" EndOfStatement() |
+	<FOR> "(" Expression() ";" Expression() ";" Expression() ")" CompoundStatement()	
+}
+void EndOfStatement() : {}
+{
+	";"
+}
+void Expression() : {}
+{
+	 LogicalTextOrExpression()
+}
+
+void LogicalTextOrExpression() :{}
+{
+	LogicalTextXorExpression() [LOOKAHEAD(2) <OR> LogicalTextOrExpression() ]
+}
+
+void LogicalTextXorExpression() : {}
+{
+	LogicalTextAndExpression() [LOOKAHEAD(2) <XOR> LogicalTextXorExpression() ]
+}
+
+void LogicalTextAndExpression() : {}
+{
+	AssignmentExpression() [LOOKAHEAD(2) <AND> LogicalTextAndExpression() ]
+}
+
+void AssignmentExpression() : {}
+{
+	ConditionalExpression() [LOOKAHEAD(2) AssignmentOperator() Expression()]
+}
+
+void AssignmentOperator() : {}
+{
+	( "=" | "+=" | "-=" | "*=" | "/=" | ".=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>=" )
+}
+
+void ConditionalExpression() : {}
+{
+	Logical_Or_Expression() [LOOKAHEAD(2) "?" Expression() ":" Expression() ]
+}
+
+
+void Logical_Or_Expression() : {}
+{
+	Logical_And_Expression() [LOOKAHEAD(2) "||" Logical_Or_Expression() ]
+}
+
+void Logical_And_Expression() : {}
+{
+	BitwiseOrExpression() [LOOKAHEAD(2) "&&" Logical_And_Expression() ]
+}
+
+void BitwiseOrExpression() : {}
+{
+	BitwiseXorExpression() [LOOKAHEAD(2) "|" BitwiseOrExpression() ]
+}
+
+void BitwiseXorExpression() : {}
+{
+	BitwiseAndExpression() [LOOKAHEAD(2) "^" BitwiseXorExpression() ]
+}
+
+void BitwiseAndExpression() : {}
+{
+	EqualityExpression() [LOOKAHEAD(2) "&" BitwiseAndExpression() ]
+}
+
+void EqualityExpression() : {}
+{
+	RelationalExpression() [LOOKAHEAD(2) ( "==" | "!=" | "===" | "!==" ) EqualityExpression() ]
+}
+
+void RelationalExpression() : {}
+{
+	ShiftExpression() [LOOKAHEAD(2) ( "<" | ">" | "<=" | ">=" ) RelationalExpression() ]
+}
+
+void ShiftExpression() : {}
+{
+	AdditiveExpression() [LOOKAHEAD(2) ( "<<" | ">>" ) ShiftExpression() ]
+}
+
+void AdditiveExpression() : {}
+{
+	MultiplicativeExpression() [LOOKAHEAD(2) ( "+" | "-" | "." ) AdditiveExpression() ]
+}
+
+void MultiplicativeExpression() : {}
+{
+	CastExpression() [LOOKAHEAD(2) ( "*" | "/" | "%" ) MultiplicativeExpression() ]
+}
+
+void CastExpression() : {}
+{
+	[ LOOKAHEAD("(" <IDENTIFIER> ")") "(" <IDENTIFIER> ")" ] UnaryExpression()
+}
+
+void UnaryExpression() : {}
+{
+	("&" | "-" | "~" | "!")* PrefixIncDecExpression()
+}
+
+void PrefixIncDecExpression() : {}
+{
+	("++" | "--" )* PostfixIncDecExpression()
+}
+
+void PostfixIncDecExpression() : {}
+{
+	 InstanceOfExpression() [ (LOOKAHEAD(3) "++" |LOOKAHEAD(3) "--" )+]
+}
+
+void InstanceOfExpression() : {}
+{
+	PostfixExpression() [LOOKAHEAD(2) <INSTANCEOF> Expression() ]
+}
+
+void PostfixExpression() : {}
+{
+  
+	PrimaryExpression() ("("  [ Argumentos()] ")" |
+						  "." PostfixExpression() | 
+						  "::" PostfixExpression() |
+						  "[" [ Expression()] "]" |
+						  "{" Expression() "}"
+						 )*
+}
+
+void PrimaryExpression() : {}
+{
+
+  Constant() 
+| "(" Expression() ")" 
+}
+
+void Constant() : {}
+{
+	<INTEGER_LITERAL> | <FLOATING_POINT_LITERAL> | String() | ["."]<IDENTIFIER>
+}
+void String() : {}
+{
+  "\"""\""
+}
+
+void Variable() : {}
+{
+	<IDENTIFIER>
+}
+
+void Argumentos() : {}
+{
+	Constant() (LOOKAHEAD(2) "," Constant())*
+}
+void Parametros() : {}
+{
+	Parametro() (LOOKAHEAD(2) "," Parametros())*
+}
+
+void Parametro() : {}
+{
+	<IDENTIFIER> <IDENTIFIER>
+}
+
+void attributos():{}{  
+  <IDENTIFIER> <IDENTIFIER> [Expression() ] ( "," <IDENTIFIER> [Expression() ]) * ";" // multi
+}

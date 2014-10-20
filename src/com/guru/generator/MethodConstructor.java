@@ -1,17 +1,60 @@
 package com.guru.generator;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class MethodConstructor {
 	private String identifier, params, returns;
+	private ArrayList<Statement> statements = new ArrayList<Statement>();
+	private Iterator<Statement> iter1;
 	public MethodConstructor(String identifier,String params,String returns) {
 		this.identifier = identifier;
 		this.params = params;
-		this.returns = returns;				
+		this.returns = returns;			
+		System.out.println(identifier);
 	}
-	public String toHeader(){		
-		return "\t" + (returns!=null?returns+" ":"")+identifier+"("+params+");";
+	public void addStatement(String a){
+		System.out.println("linha de código, metodo "+identifier);
+		statements.add(new Statement(a));
 	}
-	public String toImplementation(){	
-		System.out.println("gerando o metodo "+identifier);
+	public String toHeader(){				
+		// Fiz assim para ficar mais facil de notar a estrutura <3
+		String template = "%returns% %name% (%params%);";
 		
-		return (returns!=null?returns+" ":"")+"%class%::" +identifier+"("+(params.equals("void")?"":params)+"){};";
+		System.out.println("gerando a assinatura do metodo " + identifier);
+		
+		return this.replaceToHeader(template);				
+	}
+	public String toImplementation(){
+		// Fiz assim para ficar mais facil de notar a estrutura <3
+		
+		String template = "%returns% %class%::%name% (%params%){ /*%statements%*/ }";
+		
+		System.out.println("gerando o metodo "+identifier);
+				
+		return this.replace(template);	
+		
+	}
+	
+	private String statementToString(){
+		String retorno = "";
+		iter1 = statements.iterator();
+		while(iter1.hasNext()){
+			retorno+= "\n" + iter1.next();
+		}
+		return retorno + '\n';
+		
+	}
+	
+	private String replace(String t){
+		return t.replace("%returns% " ,returns!=null ? returns+" ":"" )
+				.replace("%name%" ,identifier)				
+				.replace("%statements%", this.statementToString())
+				.replace("%params%" ,params.equals("void")?"":params);		
+	}
+	private String replaceToHeader(String t){
+		return t.replace("%returns% " ,returns!=null ? returns+" ":"" )
+				.replace("%name%" ,identifier)
+				.replace("%params%" ,params);		
 	}
 }

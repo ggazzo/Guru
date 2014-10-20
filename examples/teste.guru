@@ -1,3 +1,6 @@
+Classe{
+	(){}
+}
 Sensor { 
   int status, trig, echo;
     /*
@@ -17,6 +20,7 @@ Sensor {
     /*!
       Faz tudo
     */
+    
     exec {
       long duration, distance;
       int vibracao = 0;
@@ -38,6 +42,8 @@ Sensor {
       analogWrite(.pulse, vibracao);
       
     }
+    exec2(int a){}
+    
     /*
       este metodo é "virtual" serve somente para ajudar a simplificar o entendimento do código
       @delay = tempo em ms que vai levar para ele trocar os valores

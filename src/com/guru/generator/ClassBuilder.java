@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 public class ClassBuilder {
 	private String nameClass;
+	private MethodConstructor lastMethod;
 	private ArrayList<MethodConstructor> methods;
 	private Iterator<MethodConstructor> iter1;
 	
@@ -34,13 +35,23 @@ public class ClassBuilder {
 	public void addConstructor(){
 		addMethod(this.nameClass, "void", null);
 	}
+	public void addConstructor(String params){
+		addMethod(this.nameClass, params, null);
+	}
 	
 	public void addMethod(String identifier){
 		addMethod(identifier, "void", "void");
 	}
+	public void addMethodWithReturn(String identifier, String returns){
+		addMethod(identifier, "void", returns);
+	}
+	public void addMethodWithParams(String identifier, String params){
+		addMethod(identifier, params,"void");
+	}
 	
 	public void addMethod(String identifier,String params,String returns){
-		methods.add(new MethodConstructor(identifier, params, returns));
+		lastMethod = new MethodConstructor(identifier, params, returns);
+		methods.add(lastMethod);
 	}
 	
 	public void build() throws IOException{
@@ -48,12 +59,16 @@ public class ClassBuilder {
 		makeImplementation();
 	}
 	
-	
+	public void addStatement(String a){
+		lastMethod.addStatement(a);
+	}
 	private void makeImplementation() throws IOException{
 		File f = new File("./src-gen/"+this.nameClass+".c");
 		FileWriter fw = new FileWriter(f);
 		f.createNewFile();
 		System.out.println("criado o arquivo:" + f.getName());
+		
+		write(fw,"/* Código gerado automaticamente pelo GuruParser*/");
 		write(fw, "#include %class%.h");
 		
 		
@@ -82,6 +97,8 @@ public class ClassBuilder {
 		 */
 		
 		
+		
+		write(fw,"/* Código gerado automaticamente pelo GuruParser*/");
 		
 		write(fw,"#ifndef %CLASS%_H");
 		write(fw,"#define %CLASS%_H");

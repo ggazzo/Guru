@@ -33,7 +33,7 @@ import com.guru.generator.*;
 
     // Run the parser
     public static void main ( String args [ ] ) {
-      GuruCParser parser ;
+      GuruCParser parser = null;
 
   	  // Hack to include type "special types"
 	    types.add("__signed__");
@@ -48,7 +48,10 @@ import com.guru.generator.*;
       else if(args.length == 1){
         System.out.println("Guru Parser .1:  Reading from file " + args[0] + " . . ." );
       try {
-        parser = new GuruCParser(new java.io.FileInputStream(args[0]));
+        if(parser!= null && parser.jj_initialized_once)        {
+          parser.ReInit(new java.io.FileInputStream(args[0]));        }else        {          
+        	parser = new GuruCParser(new java.io.FileInputStream(args[0]));
+      }
       }
       catch(java.io.FileNotFoundException e){
         System.out.println("C Parser Version 0.1:  File " + args[0] + " not found.");
@@ -192,41 +195,60 @@ LOOKAHEAD(attributos())
 | 	construtores()
 }
 
-void construtores():{}{
+void construtores():{String params;}{
   LOOKAHEAD(2)
-  "("")""{"(Statement())*"}"
-| "("Parametros()")""{"(Statement())*"}"}
+  "("")"{
+    classes.get().addConstructor();
+  }CompoundStatement()  
+| "(" params = Parametros()")"{
+    classes.get().addConstructor(params);
+  } CompoundStatement()
+}
 
 void metodos():{}{
   LOOKAHEAD(metodos_com_parametros())
  	metodos_com_parametros()
-| 	metodos_sem_parametros()}
+| 	metodos_sem_parametros()
 
-void metodos_com_parametros():{}
+}
+
+void metodos_com_parametros():{Token t,t2;String params;}
 {
   LOOKAHEAD(2)
-  <IDENTIFIER> "("Parametros()")" "{"(Statement())*"}"
-| <IDENTIFIER> <IDENTIFIER> "("Parametros()")""{"(Statement())*"}"}
-void metodos_sem_parametros():{}{
+  t= <IDENTIFIER> "("params = Parametros()")" {
+  	classes.get().addMethodWithParams(t.toString(), params);
+	} CompoundStatement() 
+| t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
+  classes.get().addMethod(t2.toString(),params,t.toString());
+
+	} CompoundStatement() }
+void metodos_sem_parametros():{Token t,t2;}{
   LOOKAHEAD(2)
-  <IDENTIFIER> "{"(Statement())*"}"
-| <IDENTIFIER> <IDENTIFIER> CompoundStatement()
+  t = <IDENTIFIER> {
+  classes.get().addMethod(t.toString());
+} CompoundStatement()
+| t = <IDENTIFIER> t2 = <IDENTIFIER> {
+  classes.get().addMethodWithReturn(t2.toString(),t.toString());
+} CompoundStatement()
   }
 
 void CompoundStatement() : {}
 {
 	"{"
-	    ( Statement())*
+	    ( Statement() {
+		 	classes.get().addStatement("a=a;");	
+		})*
 	"}"
 }
 void Statement() : {}
 {
   
-	LOOKAHEAD(2) Expression() ";"
+	(	  LOOKAHEAD(2) Expression() ";"	
 | 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
 |  	Variable() "=" Expression() ";"
 | 	SelectionStatement()
 | 	IterationStatement()
+)
 
 
  /*	LOOKAHEAD(2) LabeledStatement() |
@@ -244,6 +266,7 @@ void Statement() : {}
 |	ThrowStatement()
 | 	TryBlock()
 |	EndOfStatement()*/
+  
 }
 
 void SelectionStatement() : {}
@@ -408,14 +431,24 @@ void Argumentos() : {}
 {
 	Constant() (LOOKAHEAD(2) "," Constant())*
 }
-void Parametros() : {}
+String Parametros() : {String retorno, tmp;}
 {
-	Parametro() (LOOKAHEAD(2) "," Parametros())*
+	retorno  = Parametro() (LOOKAHEAD(2) "," tmp = Parametros()	{
+	  retorno += ", " + tmp;	})*
+	{
+	  return retorno;	}
 }
 
-void Parametro() : {}
+String Parametro() : {Token t;String retorno;}
 {
-	<IDENTIFIER> <IDENTIFIER>
+	t = <IDENTIFIER>	{
+	  retorno = t.toString();	}
+	t = <IDENTIFIER>{
+	  retorno += " "+t.toString();
+	}
+
+	{
+	  return retorno;	}
 }
 
 void attributos():{}{  

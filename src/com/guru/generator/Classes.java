@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import com.sun.org.apache.regexp.internal.recompile;
+
 
 public class Classes {
 	private ArrayList<ClassBuilder> classes = new ArrayList<ClassBuilder>();
@@ -26,6 +28,9 @@ public class Classes {
 			}
 		}
 		
+	}
+	public ClassBuilder get(){
+		return lastClass;
 	}
 	public void addMethod(String name){
 		lastClass.addMethod(name);

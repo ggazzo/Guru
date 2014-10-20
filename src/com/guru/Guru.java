@@ -31,7 +31,7 @@ public class Guru {
                   if(str.equals(".guru"))
                   {	
                 	  p[0] =  dir.getPath()+"/"+name;
-                	 GuruCParser.main(p);
+                	 GuruCParser.main(p);                	 
                      return true;
                   }
                }

@@ -35,6 +35,7 @@ Sensor {
 
       if(distance > DISTANCIA_MAXIMA || !duration){
         analogWrite(.pulse, 0);
+        if(true){}else{}
         //return;
       }
       

@@ -183,7 +183,7 @@ void ClassMembers() : {}
 {
 	"{" (MemberDeclaration() )* "}"
 }
-void MemberDeclaration() : {}
+void MemberDeclaration() : {String s;}
 {
   /*
 	attributos
@@ -192,7 +192,7 @@ void MemberDeclaration() : {}
 LOOKAHEAD(attributos())
 	attributos()
 | 	metodos()
-| 	construtores()
+| 	construtores()
 }
 
 void construtores():{String params;}{
@@ -212,44 +212,60 @@ void metodos():{}{
 
 }
 
-void metodos_com_parametros():{Token t,t2;String params;}
+void metodos_com_parametros():{Token t,t2;String params,s;}
 {
-  LOOKAHEAD(2)
+(    LOOKAHEAD(2)
   t= <IDENTIFIER> "("params = Parametros()")" {
   	classes.get().addMethodWithParams(t.toString(), params);
-	} CompoundStatement() 
+	} s = CompoundStatement() 
 | t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
   classes.get().addMethod(t2.toString(),params,t.toString());
 
-	} CompoundStatement() }
-void metodos_sem_parametros():{Token t,t2;}{
+	} s = CompoundStatement()
+){
+  classes.get().addStatement(s);
+}}
+void metodos_sem_parametros():{Token t,t2;String s;}{
   LOOKAHEAD(2)
   t = <IDENTIFIER> {
   classes.get().addMethod(t.toString());
-} CompoundStatement()
+} s = CompoundStatement(){
+  classes.get().addStatement(s);
+}
 | t = <IDENTIFIER> t2 = <IDENTIFIER> {
   classes.get().addMethodWithReturn(t2.toString(),t.toString());
-} CompoundStatement()
+} s = CompoundStatement() {
+  classes.get().addStatement(s);
+}
   }
 
-void CompoundStatement() : {}
+String CompoundStatement() : {String retorno="",s;}
 {
 	"{"
-	    ( Statement() {
-		 	classes.get().addStatement("a=a;");	
+	    (s= Statement() {		 	
+		 	retorno += s; 
 		})*
 	"}"
+	{
+	  return retorno;	}
 }
-void Statement() : {}
+String Statement() : {String retorno = "",tmp;}
 {
   
-	(	  LOOKAHEAD(2) Expression() ";"	
+(	LOOKAHEAD(2) retorno = Expression() ";"	{
+	  retorno += ";\n";	}	
 | 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
-|  	Variable() "=" Expression() ";"
-| 	SelectionStatement()
+|  	retorno = Variable() "="	{
+	  retorno += " = ";	}
+	tmp = Expression()
+	{
+	  retorno += tmp +";";
+	} ";"
+| 	retorno = SelectionStatement()
 | 	IterationStatement()
 )
-
+{
+  return retorno;}
 
  /*	LOOKAHEAD(2) LabeledStatement() |
 	LOOKAHEAD(2) ClassDeclaration() |
@@ -269,10 +285,19 @@ void Statement() : {}
   
 }
 
-void SelectionStatement() : {}
+String SelectionStatement() : {Token t;String retorno="",s,exp;}
 {
-	<IF> "(" Expression() ")" CompoundStatement() ( LOOKAHEAD(2) <ELSEIF> "(" Expression() ")" CompoundStatement() )* [ LOOKAHEAD(2) <ELSE> CompoundStatement() ] |
-	<SWITCH> "(" Expression() ")" CompoundStatement()  
+	(	  	t = <IF> "(" exp = Expression() ")" s = CompoundStatement()	  	{
+	  	  retorno = t.toString() + "("+exp+")"+ "{\n"+s+"\n}";	  	}
+	  	( LOOKAHEAD(2) t = <ELSEIF> "(" exp = Expression() ")" s = CompoundStatement()	  	{
+	  	  retorno += t.toString() + "("+exp+")"+ "{\n"+s+"\n}";	  	})* [ LOOKAHEAD(2) t = <ELSE> s = CompoundStatement()
+			{ 				retorno += t.toString() + "{\n"+s+"\n}";
+			}
+	  	] |
+		t = <SWITCH> "(" exp = Expression() ")" s = CompoundStatement()		{
+		  retorno = t.toString() + "("+"){"+s+"}";		   		}
+	)	{
+	  return retorno;	}
 }
 void IterationStatement() : {}
 {
@@ -284,9 +309,11 @@ void EndOfStatement() : {}
 {
 	";"
 }
-void Expression() : {}
+String Expression() : {}
 {
 	 LogicalTextOrExpression()
+	 {
+	   return "";	 }
 }
 
 void LogicalTextOrExpression() :{}
@@ -413,7 +440,7 @@ void PrimaryExpression() : {}
 | "(" Expression() ")" 
 }
 
-void Constant() : {}
+void Constant() : {Token t;}
 {
 	<INTEGER_LITERAL> | <FLOATING_POINT_LITERAL> | String() | ["."]<IDENTIFIER>
 }
@@ -422,15 +449,18 @@ void String() : {}
   "\"""\""
 }
 
-void Variable() : {}
+String Variable() : {Token t;}
 {
-	<IDENTIFIER>
+	t=	<IDENTIFIER>
+	{
+	  return t.toString();	}
 }
 
 void Argumentos() : {}
 {
 	Constant() (LOOKAHEAD(2) "," Constant())*
 }
+
 String Parametros() : {String retorno, tmp;}
 {
 	retorno  = Parametro() (LOOKAHEAD(2) "," tmp = Parametros()	{

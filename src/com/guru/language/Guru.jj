@@ -1,0 +1,587 @@
+PARSER_BEGIN(GuruCParser)
+package com.guru.language;
+import java.util.*;
+import com.guru.generator.*; 
+  
+  public class GuruCParser{
+	private static Classes classes = new Classes();
+
+    // Hastable for storing typedef types
+    private static Set types = new HashSet();
+
+    // Stack for determining when the parser 
+    // is parsing a typdef definition.
+    private static Stack typedefParsingStack = new Stack();
+
+    // Returns true if the given string is
+    // a typedef type.
+    private static boolean isType(String type){
+   	  return types.contains(type);
+    }
+
+    // Add a typedef type to those already defined
+    private static void addType(String type){
+   	  types.add(type);
+    }
+
+    // Prints out all the types used in parsing the c source
+    private static void printTypes(){
+      for (Iterator i = types.iterator(); i.hasNext();) {
+        System.out.println(i.next());
+      }
+    }
+
+    // Run the parser
+    public static void main ( String args [ ] ) {
+      GuruCParser parser = null;
+
+  	  // Hack to include type "special types"
+	    types.add("__signed__");
+	    types.add("__const");
+	    types.add("__inline__");
+	    types.add("__signed");
+
+      if(args.length == 0){
+        System.out.println("Guru Parser .1:  Reading from standard input . . .");
+        parser = new GuruCParser(System.in);
+      }
+      else if(args.length == 1){
+        System.out.println("Guru Parser .1:  Reading from file " + args[0] + " . . ." );
+      try {
+        if(parser!= null && parser.jj_initialized_once)
+        {
+          parser.ReInit(new java.io.FileInputStream(args[0]));
+        }else
+        {
+          
+        	parser = new GuruCParser(new java.io.FileInputStream(args[0]));
+      }
+      }
+      catch(java.io.FileNotFoundException e){
+        System.out.println("C Parser Version 0.1:  File " + args[0] + " not found.");
+        return ;
+        }
+      }
+      else {
+        System.out.println("Guru Parser .1:  Usage is one of:");
+        System.out.println("         java CParser < inputfile");
+        System.out.println("OR");
+        System.out.println("         java CParser inputfile");
+        return ;
+      }
+      try {
+        parser.TranslationUnit();
+        //System.out.println("Guru Parser .1:  Java program parsed successfully.");
+        classes.build();
+      }
+      catch(ParseException e){
+        System.out.println("Guru Parser .1:  Encountered errors during parse.");
+        e.printStackTrace();
+      }
+    }
+  }
+
+PARSER_END(GuruCParser)
+
+SKIP : {
+ " "
+|  "\t"
+|  "\n"
+|  "\r"
+|  <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+|  <"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
+| "#" : PREPROCESSOR_OUTPUT
+}
+
+
+<PREPROCESSOR_OUTPUT> SKIP:
+{
+     "\n" : DEFAULT
+}
+
+<PREPROCESSOR_OUTPUT> MORE:
+{
+ "\\\n"
+ |
+ "\\\r\n"
+ |
+ < ~[] >
+}
+
+
+
+TOKEN : {
+ <INTEGER_LITERAL: <DECIMAL_LITERAL> (["l","L"])? | <HEX_LITERAL> (["l","L"])? | <OCTAL_LITERAL> (["l","L"])?>
+|  <#DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])*>
+|  <#HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+>
+|  <#OCTAL_LITERAL: "0" (["0"-"7"])*>
+|  <FLOATING_POINT_LITERAL: (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])? | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])? | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])? | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]>
+|  <#EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+>
+|  <CHARACTER_LITERAL: "\'" (~["\'","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"])) "\'">
+|  <STRING_LITERAL: "\"" ( ~["\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "\"">
+}
+
+TOKEN : {
+	<CONTINUE: "continue"> |
+	<VOLATILE: "volatile"> |
+	<REGISTER: "register"> |
+	<UNSIGNED: "unsigned"> |
+	<TYPEDEF: "typedef"> |
+	<DFLT: "default"> |
+	<DOUBLE: "double"> |
+	<SIZEOF: "sizeof"> |
+	<SWITCH: "switch"> |
+	<RETURN: "return"> |
+	<EXTERN: "extern"> |
+	<STRUCT: "struct"> |
+	<STATIC: "static"> |
+	<SIGNED: "signed"> |
+	<WHILE: "while"> |
+	<BREAK: "break"> |
+	<UNION: "union"> |
+	<CONST: "const"> |
+	<FLOAT: "float"> |
+	<SHORT: "short"> |
+	<IF: "if"> |
+	<INSTANCEOF: "instanceof" >|
+	<ELSE: "else"> |
+	<ELSEIF: "elseif"> |
+	<AND: "and"> |
+	<OR: "or"> |
+	<XOR: "xor"> |
+	<NOT: "not"> |
+	<CASE: "case"> |
+//	<LONG: "long"> |
+	<ENUM: "enum"> |
+	<AUTO: "auto"> |
+	<VOID: "void"> |
+	<CHAR: "char"> |
+	<GOTO: "goto"> |
+	<FOR: "for"> |
+//	<INT: "int"> |
+	
+	<DO: "do"> |
+	<EXTENDS : "extends" >
+}
+
+TOKEN : {
+ <IDENTIFIER: <LETTER> (<LETTER> | <DIGIT>)*>
+|  <#LETTER: ["$","A"-"Z","_","a"-"z"]>
+|  <#DIGIT: ["0"-"9"]>
+}
+
+void TranslationUnit() : {}
+{
+	(
+	  ClassDeclaration() // procura classes (:
+	)*
+}
+
+
+
+void ClassDeclaration() : {Token t;}
+{
+	[t = <IDENTIFIER>{
+	  classes.addClass(t.toString());
+	}] [<EXTENDS> <IDENTIFIER> ( "," <IDENTIFIER>) * ] ClassMembers()
+}
+void ClassMembers() : {}
+{
+	"{" (MemberDeclaration() )* "}"
+}
+void MemberDeclaration() : {String s;}
+{
+  /*
+	attributos
+	metodos
+  */
+LOOKAHEAD(attributos())
+	attributos()
+| 	metodos()
+| 	construtores()
+
+}
+
+void construtores():{String params;}
+{
+  LOOKAHEAD(2)
+  "("")"{
+    classes.get().addConstructor();
+  }CompoundStatement()
+  
+| "(" params = Parametros()")"{
+    classes.get().addConstructor(params);
+  } CompoundStatement()
+
+}
+
+void metodos():{}
+{
+  LOOKAHEAD(metodos_com_parametros())
+ 	metodos_com_parametros()
+| 	metodos_sem_parametros()
+
+
+}
+
+void metodos_com_parametros():{Token t,t2;String params,s;}
+{
+(
+    LOOKAHEAD(2)
+  t= <IDENTIFIER> "("params = Parametros()")" {
+  	classes.get().addMethodWithParams(t.toString(), params);
+	} s = CompoundStatement()
+ 
+| t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
+  classes.get().addMethod(t2.toString(),params,t.toString());
+
+	} s = CompoundStatement()
+){
+  classes.get().addStatement(s);
+}
+}
+void metodos_sem_parametros():{Token t,t2;String s;}
+{
+  LOOKAHEAD(2)
+  t = <IDENTIFIER> {
+  classes.get().addMethod(t.toString());
+} s = CompoundStatement(){
+  classes.get().addStatement(s);
+}
+| t = <IDENTIFIER> t2 = <IDENTIFIER> {
+  classes.get().addMethodWithReturn(t2.toString(),t.toString());
+} s = CompoundStatement() {
+  classes.get().addStatement(s);
+}
+  
+}
+
+String CompoundStatement() : {String retorno="",s;}
+{
+	"{"
+	    (s= Statement() {		 	
+		 	retorno += s; 
+		})*
+	"}"
+	{
+	  return retorno;
+	}
+}
+String Statement() : {String retorno = "",tmp;}
+{
+  
+(LOOKAHEAD(2) retorno = Expression() ";"
+	{
+	  retorno += ";\n";
+	}	
+| 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
+|  	retorno = Variable() "="
+	{
+	  retorno += " = ";
+	}
+	tmp = Expression()
+	{
+	  retorno += tmp +";";
+	} ";"
+		
+| 	retorno = SelectionStatement()
+| 	retorno = IterationStatement()
+)
+{
+  return retorno;
+}
+
+ /*	LOOKAHEAD(2) LabeledStatement() |
+	LOOKAHEAD(2) ClassDeclaration() |
+	LOOKAHEAD(2) InterfaceDeclaration() |
+	LOOKAHEAD(2) ExpressionStatement() |
+	CompoundStatement() |
+	SelectionStatement() |
+	IterationStatement() |
+	JumpStatement() |
+	IncludeStatement() |
+	EchoStatement() |
+	DefineStatement() |
+	MemberDeclaration()
+|	ThrowStatement()
+| 	TryBlock()
+|	EndOfStatement()*/
+
+  
+}
+
+String SelectionStatement() : {Token t;String retorno="",s="",exp="";}
+{
+	(
+	  	t = <IF> "(" exp = Expression() ")" s = CompoundStatement()
+	  	{
+	  	  retorno = t.toString() + "("+exp+")"+ "{\n"+s+"\n}";
+	  	}
+	  	( LOOKAHEAD(2) t = <ELSEIF> "(" exp = Expression() ")" s = CompoundStatement()
+	  	{
+	  	  retorno += t.toString() + "("+exp+")"+ "{\n"+s+"\n}";
+	  	})* [ LOOKAHEAD(2) t = <ELSE> s = CompoundStatement()
+			{
+ 				retorno += t.toString() + "{\n"+s+"\n}";
+			}
+	  	] |
+		t = <SWITCH> "(" exp = Expression() ")" s = CompoundStatement()
+		{
+		  retorno = t.toString() + "("+"){"+s+"}";		   
+		}
+	)
+	{
+	  return retorno;
+	}
+}
+String IterationStatement() : {String retorno="",s="",exp="",tmp="";}
+{
+	(<WHILE> "(" exp = Expression() ")" tmp = CompoundStatement() {           
+            retorno = "while ( %exp% ){ %statments% }".replace("%exp%",exp).replace("%statments%",tmp);
+        } |
+	<DO> tmp = CompoundStatement() <WHILE> "(" exp = Expression() ")" EndOfStatement()  {           
+            retorno = " do{ %statments% }while( %exp% );".replace("%exp%",exp).replace("%statments%",tmp);
+        }|
+	<FOR> "(" Expression() ";" Expression() ";" Expression() ")" CompoundStatement()	
+        )
+        {
+            return retorno;
+        }
+
+}
+void EndOfStatement() : {}
+{
+	";"
+}
+String Expression() : {String retorno;}
+{
+	 retorno  = LogicalTextOrExpression()
+	 {
+	   return retorno.trim();
+	 }
+}
+
+String LogicalTextOrExpression() :{String tmp1="",tmp2="",tmp3="";Token t= null;}
+{
+    (tmp1 = LogicalTextXorExpression() [LOOKAHEAD(2) t = <OR> tmp3 = LogicalTextOrExpression(){tmp2= t.toString();}] )
+    { return "%exp1% %con% %exp2%".replace("%exp1%",tmp1).replace("%con%",tmp2).replace("%exp2%",tmp3).trim();  }
+}
+
+String LogicalTextXorExpression() : {String tmp1="",tmp2="",tmp3="";Token t= null;}
+{
+    (tmp1 = LogicalTextAndExpression() [LOOKAHEAD(2) t = <XOR> tmp3 = LogicalTextXorExpression() {tmp2= t.toString();}] )
+    { return "%exp1% %con% %exp2%".replace("%exp1%",tmp1).replace("%con%",tmp2).replace("%exp2%",tmp3).trim();  }
+}
+
+String LogicalTextAndExpression() : {String tmp1="",tmp2="",tmp3="";Token t= null;}
+{
+    ( tmp1 = AssignmentExpression() [LOOKAHEAD(2) t = <AND> LogicalTextAndExpression() {tmp2= t.toString();}] )
+    { return "%exp1% %con% %exp2%".replace("%exp1%",tmp1).replace("%con%",tmp2).replace("%exp2%",tmp3).trim();  }
+}
+
+String AssignmentExpression() : {String tmp1="",tmp2="",tmp3="";Token t= null;}
+{
+    ( tmp1 = ConditionalExpression() [LOOKAHEAD(2) tmp2 = AssignmentOperator() tmp3 = Expression()] )
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).replace("%exp3%",tmp3).trim();  }
+}
+
+String AssignmentOperator() : {Token r;}
+{
+    ( r =  "=" | r = "+=" |r = "-=" | r = "*=" | r = "/=" | r = ".=" | r = "%=" | r = "&=" | r = "|=" | r = "^=" | r = "<<=" | r = ">>=" )
+    { return r.toString();  }
+}
+
+String ConditionalExpression() : {String tmp1="",tmp2="",tmp3="";Token t= null;}
+{
+    (tmp1 = Logical_Or_Expression() [LOOKAHEAD(2) t="?" tmp2 = Expression() ":" tmp3 = Expression() ])    
+    { 
+        if (t!=null)
+            return "%exp1% %token% %exp2% : %exp3%".replace("%exp1%",tmp1).replace("%token%",t!=null?t.toString():"").replace("%exp2%",tmp2).replace("%exp3%",tmp3).trim();  
+        else
+            return "%exp1%".replace("%exp1%",tmp1).trim();
+    }
+}
+
+
+String Logical_Or_Expression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = Logical_And_Expression() [LOOKAHEAD(2) tmp2 = "||" tmp3 = Logical_Or_Expression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String Logical_And_Expression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = BitwiseOrExpression() [LOOKAHEAD(2) tmp2 = "&&" tmp3 = Logical_And_Expression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String BitwiseOrExpression() :  {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = BitwiseXorExpression() [LOOKAHEAD(2) tmp2 = "|" tmp3 = BitwiseOrExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String BitwiseXorExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = BitwiseAndExpression() [LOOKAHEAD(2) tmp2 = "^" tmp3 = BitwiseXorExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String BitwiseAndExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = EqualityExpression() [LOOKAHEAD(2) tmp2 = "&" tmp3 = BitwiseAndExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String EqualityExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = RelationalExpression() [LOOKAHEAD(2) ( tmp2 = "==" | tmp2 = "!=" | tmp2 = "===" | tmp2 = "!==" ) tmp3 = EqualityExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String RelationalExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = ShiftExpression() [LOOKAHEAD(2) ( tmp2 = "<" | tmp2 = ">" | tmp2 = "<=" | tmp2 = ">=" ) tmp3 = RelationalExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String ShiftExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = AdditiveExpression() [LOOKAHEAD(2) (tmp2 = "<<" | tmp2 = ">>" ) tmp3= ShiftExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String AdditiveExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = MultiplicativeExpression() [LOOKAHEAD(2) ( tmp2 = "+" | tmp2 = "-" | tmp2 = "." ) tmp3 = AdditiveExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String MultiplicativeExpression() : {String tmp1="",tmp3="";Token tmp2=null;}
+{
+    (tmp1 = CastExpression() [LOOKAHEAD(2) ( tmp2 = "*" | tmp2 = "/" | tmp2 = "%" ) tmp3 = MultiplicativeExpression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",tmp2!=null?tmp2.toString():"").replace("%exp3%",tmp3).trim();  }
+}
+
+String CastExpression() : {Token t1=null, t2=null; String tmp1="";}
+{
+    ([ LOOKAHEAD("(" t1 = <IDENTIFIER> ")") "(" t2 = <IDENTIFIER> ")" ] tmp1 = UnaryExpression())
+    { 
+        if(t1==null)
+        return "%exp3%".replace("%exp3%",tmp1).trim();  
+        else
+        return "(%exp1%) (%exp2%) %exp3%".replace("%exp1%",t1!=null?t1.toString():"").replace("%exp2%",t2!=null?t2.toString():"").replace("%exp3%",tmp1).trim();  
+    }
+}
+
+String UnaryExpression() : {Token t1, t2; String tmp1="",tmp2;}
+{
+    (((t1 = "&" | t1 = "-" | t1 = "~" | t1 = "!"){tmp1+=t1.toString();  })* tmp2 = PrefixIncDecExpression())
+
+    { return "%exp1% %exp2%".replace("%exp1%",tmp1.toString()).replace("%exp2%",tmp2).trim();  }
+}
+
+String PrefixIncDecExpression() : {Token t1;String tmp1 = "", tmp2="";}
+{
+    ((LOOKAHEAD(3)(t1 = "++" | t1 = "--" ){tmp1+=t1.toString();  })* tmp2 = PostfixIncDecExpression())
+    { return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).trim();  }
+}
+
+String PostfixIncDecExpression() : {String tmp1,tmp="";Token tmp2;}
+{
+    (tmp1 = InstanceOfExpression()  [(LOOKAHEAD(3)( tmp2 = "++" | tmp2 = "--" ){tmp+=tmp2.toString();})+])
+    { return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp).trim();  }
+}
+
+String InstanceOfExpression() : {String tmp1,tmp2="";Token t=null;}
+{
+    (tmp1 = PostfixExpression() [LOOKAHEAD(2) t = <INSTANCEOF> tmp2 = Expression() ])
+    { return "%exp1% %exp2% %exp3%".replace("%exp1%",tmp1).replace("%exp2%",t!=null?t.toString():"").replace("%exp3%",tmp2).trim();  }
+}
+
+String PostfixExpression() : {String tmp1,tmp2="",tmp3=null, tmp4;Token t;}
+{
+  
+	tmp1 =  PrimaryExpression() 
+            (LOOKAHEAD(3)(
+            "(" [tmp3 = Argumentos() ]")" {tmp4="(%r%)";}|
+            "." tmp3 = PostfixExpression(){tmp4=".%r%";} | 
+            "::" tmp3 = PostfixExpression(){tmp4="::%r%";} |
+            "[" [tmp3 = Expression()] "]" {tmp4="[%r%]";}|
+            "{" [tmp3 = Expression()] "}" {tmp4="{%r%}";}
+           ){
+                if(tmp3!=null){
+                    tmp2+=tmp4.replace("%r%",tmp3);
+                    tmp3=null;
+                }
+            })*
+{ return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).trim();  }
+}
+
+String PrimaryExpression() : {String tmp;}
+{
+
+  (tmp = Constant() 
+| "(" tmp = Expression() ")" {tmp = "("+tmp+")";}
+)
+{return tmp.trim();}
+}
+
+String Constant() : {Token t,t2 = null;String retorno="";}
+{
+	(t = <INTEGER_LITERAL> {retorno = t.toString();}| t = <FLOATING_POINT_LITERAL> {retorno = t.toString();}| retorno = String() | [t2="."] t = <IDENTIFIER> {retorno =(t2!=null?"this->":"")+t.toString();})
+        {return retorno.trim();}
+}
+String String() : {}
+{
+  "\"""\""
+{return "TEXTO";}
+}
+
+String Variable() : {Token t;}
+{
+	t=	<IDENTIFIER>
+	{
+	  return t.toString();
+	}
+}
+
+String Argumentos() : {String tmp="", tmp2; }
+{
+    tmp = Constant() (LOOKAHEAD(2) "," tmp2 = Constant(){tmp+= ", "+tmp2;})*
+    {return tmp;
+
+}
+
+}
+
+String Parametros() : {String retorno, tmp;}
+{
+	retorno  = Parametro() (LOOKAHEAD(2) "," tmp = Parametros()
+	{
+	  retorno += ", " + tmp;
+	})*
+	{
+	  return retorno;
+	}
+}
+
+String Parametro() : {Token t;String retorno;}
+{
+	t = <IDENTIFIER>
+	{
+	  retorno = t.toString();
+	}
+	t = <IDENTIFIER>{
+	  retorno += " "+t.toString();
+	}
+
+	{
+	  return retorno;
+	}
+}
+
+void attributos():{}
+{  
+  <IDENTIFIER> <IDENTIFIER> [Expression() ] ( "," <IDENTIFIER> [Expression() ]) * ";" // multi
+}

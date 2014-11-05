@@ -9,9 +9,9 @@ Sensor {
       @pulse pino do sinal de saida
     */
     (int echo, int trig, int pulse){
-      echo = echo;
-      trig = trig;
-      pulse = pulse;
+      .echo = echo;
+      .trig = trig;
+      .pulse = pulse;
       pinMode(trig, OUTPUT);
       pinMode(echo, INPUT);
       pinMode(pulse, OUTPUT);
@@ -24,7 +24,6 @@ Sensor {
     exec {
       long duration, distance;
       int vibracao = 0;
-      
       toogleDelay(10);
 
       duration = pulseIn(.echo, HIGH, MAX_TEMP);

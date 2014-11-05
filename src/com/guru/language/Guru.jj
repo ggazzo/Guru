@@ -53,7 +53,6 @@ import com.guru.generator.*;
           parser.ReInit(new java.io.FileInputStream(args[0]));
         }else
         {
-          
         	parser = new GuruCParser(new java.io.FileInputStream(args[0]));
       }
       }
@@ -231,7 +230,6 @@ void metodos_com_parametros():{Token t,t2;String params,s;}
   t= <IDENTIFIER> "("params = Parametros()")" {
   	classes.get().addMethodWithParams(t.toString(), params);
 	} s = CompoundStatement()
- 
 | t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
   classes.get().addMethod(t2.toString(),params,t.toString());
 
@@ -552,7 +550,6 @@ String Argumentos() : {String tmp="", tmp2; }
     {return tmp;
 
 }
-
 }
 
 String Parametros() : {String retorno, tmp;}

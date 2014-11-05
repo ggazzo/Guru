@@ -28,6 +28,7 @@ public class MethodConstructor {
 	public String toImplementation(){
 		// Fiz assim para ficar mais facil de notar a estrutura <3
 		
+
 		String template = "%returns% %class%::%name% (%params%){ %statements% }";
 		
 		System.out.println("gerando o metodo "+identifier);

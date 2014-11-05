@@ -53,7 +53,6 @@ import com.guru.generator.*;
           parser.ReInit(new java.io.FileInputStream(args[0]));
         }else
         {
-
                 parser = new GuruCParser(new java.io.FileInputStream(args[0]));
       }
       }
@@ -1429,13 +1428,17 @@ import com.guru.generator.*;
     finally { jj_save(31, xla); }
   }
 
-  static private boolean jj_3R_39() {
-    if (jj_3R_53()) return true;
+  static private boolean jj_3R_21() {
+    if (jj_3R_43()) return true;
     Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3_32()) { jj_scanpos = xsp; break; }
-    }
+    xsp = jj_scanpos;
+    if (jj_3_13()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3_31() {
+    if (jj_scan_token(60)) return true;
+    if (jj_3R_38()) return true;
     return false;
   }
 
@@ -1444,6 +1447,16 @@ import com.guru.generator.*;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3_12()) jj_scanpos = xsp;
+    return false;
+  }
+
+  static private boolean jj_3R_39() {
+    if (jj_3R_53()) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3_32()) { jj_scanpos = xsp; break; }
+    }
     return false;
   }
 
@@ -1876,6 +1889,14 @@ import com.guru.generator.*;
     return false;
   }
 
+  static private boolean jj_3R_52() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_scan_token(97)) jj_scanpos = xsp;
+    if (jj_scan_token(IDENTIFIER)) return true;
+    return false;
+  }
+
   static private boolean jj_3_8() {
     if (jj_3R_17()) return true;
     if (jj_3R_17()) return true;
@@ -1887,14 +1908,6 @@ import com.guru.generator.*;
       if (jj_3_6()) { jj_scanpos = xsp; break; }
     }
     if (jj_scan_token(65)) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_52() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_scan_token(97)) jj_scanpos = xsp;
-    if (jj_scan_token(IDENTIFIER)) return true;
     return false;
   }
 
@@ -2126,6 +2139,11 @@ import com.guru.generator.*;
     return false;
   }
 
+  static private boolean jj_3_3() {
+    if (jj_3R_15()) return true;
+    return false;
+  }
+
   static private boolean jj_3R_25() {
     if (jj_3R_26()) return true;
     Token xsp;
@@ -2136,11 +2154,6 @@ import com.guru.generator.*;
 
   static private boolean jj_3R_40() {
     if (jj_3R_18()) return true;
-    return false;
-  }
-
-  static private boolean jj_3_3() {
-    if (jj_3R_15()) return true;
     return false;
   }
 
@@ -2194,9 +2207,9 @@ import com.guru.generator.*;
     return false;
   }
 
-  static private boolean jj_3_32() {
-    if (jj_scan_token(60)) return true;
-    if (jj_3R_39()) return true;
+  static private boolean jj_3_2() {
+    if (jj_scan_token(63)) return true;
+    if (jj_scan_token(64)) return true;
     return false;
   }
 
@@ -2208,14 +2221,14 @@ import com.guru.generator.*;
     return false;
   }
 
-  static private boolean jj_3_2() {
-    if (jj_scan_token(63)) return true;
-    if (jj_scan_token(64)) return true;
+  static private boolean jj_3_1() {
+    if (jj_3R_14()) return true;
     return false;
   }
 
-  static private boolean jj_3_1() {
-    if (jj_3R_14()) return true;
+  static private boolean jj_3_32() {
+    if (jj_scan_token(60)) return true;
+    if (jj_3R_39()) return true;
     return false;
   }
 
@@ -2278,12 +2291,6 @@ import com.guru.generator.*;
     return false;
   }
 
-  static private boolean jj_3R_53() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    if (jj_scan_token(IDENTIFIER)) return true;
-    return false;
-  }
-
   static private boolean jj_3R_43() {
     if (jj_3R_55()) return true;
     Token xsp;
@@ -2292,17 +2299,9 @@ import com.guru.generator.*;
     return false;
   }
 
-  static private boolean jj_3R_21() {
-    if (jj_3R_43()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_13()) jj_scanpos = xsp;
-    return false;
-  }
-
-  static private boolean jj_3_31() {
-    if (jj_scan_token(60)) return true;
-    if (jj_3R_38()) return true;
+  static private boolean jj_3R_53() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    if (jj_scan_token(IDENTIFIER)) return true;
     return false;
   }
 

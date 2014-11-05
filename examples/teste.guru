@@ -1,0 +1,58 @@
+Classe{
+	(){}
+}
+Sensor { 
+  int status, trig, echo;
+    /*
+      @echo pino de resposta
+      @trig pino que ativa o sensor
+      @pulse pino do sinal de saida
+    */
+    (int echo, int trig, int pulse){
+      echo = echo;
+      trig = trig;
+      pulse = pulse;
+      pinMode(trig, OUTPUT);
+      pinMode(echo, INPUT);
+      pinMode(pulse, OUTPUT);
+      digitalWrite(.trig, LOW);
+    }
+    /*!
+      Faz tudo
+    */
+    
+    exec {
+      long duration, distance;
+      int vibracao = 0;
+      
+      toogleDelay(10);
+
+      duration = pulseIn(.echo, HIGH, MAX_TEMP);
+      
+      distance = (duration/2) / 29.1;
+      
+      distance = (distance < DISTANCIA_MINIMA ? DISTANCIA_MINIMA : distance);
+
+      if(distance > DISTANCIA_MAXIMA || !duration){
+        analogWrite(.pulse, 0);
+        if(true){}else{}
+        //return;
+      }
+      
+      vibracao = VIBRACAO_MAXIMA - (distance - DISTANCIA_MINIMA)* VIBRACAO_RANGE / DISTANCIA_RANGE;
+      analogWrite(.pulse, vibracao);
+      
+    }
+    exec2(int a){}
+    
+    /*
+      este metodo é "virtual" serve somente para ajudar a simplificar o entendimento do código
+      @delay = tempo em ms que vai levar para ele trocar os valores
+    */
+    toogleDelay delay {
+      digitalWrite(.trig, HIGH);
+      delayMicroseconds(delay);
+      digitalWrite(.trig, LOW);
+    }
+
+}

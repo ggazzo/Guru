@@ -1,6 +1,33 @@
-Classe{
-	(){}
+A {
+    int a = 1, b;
+    int c;
+
+    private int d;
+    {
+        .a = 0;
+    }
+    make {
+        .a=1;
+    }
 }
+
+
+Teste {
+    int a;
+
+   {
+        .a = new Teste();
+   }
+    (int a){ 
+    .a = new benga();
+    }
+
+    private {
+        a = 1;
+    }
+
+}
+
 Sensor { 
   int status, trig, echo;
     /*
@@ -12,9 +39,9 @@ Sensor {
       .echo = echo;
       .trig = trig;
       .pulse = pulse;
-      pinMode(trig, OUTPUT);
-      pinMode(echo, INPUT);
-      pinMode(pulse, OUTPUT);
+      pinMode(.trig, OUTPUT);
+      pinMode(.echo, INPUT);
+      pinMode(.pulse, OUTPUT);
       digitalWrite(.trig, LOW);
     }
     /*!
@@ -34,8 +61,8 @@ Sensor {
 
       if(distance > DISTANCIA_MAXIMA || !duration){
         analogWrite(.pulse, 0);
-        if(true){}else{}
-        //return;
+        
+        return a;
       }
       
       vibracao = VIBRACAO_MAXIMA - (distance - DISTANCIA_MINIMA)* VIBRACAO_RANGE / DISTANCIA_RANGE;
@@ -48,7 +75,7 @@ Sensor {
       este metodo é "virtual" serve somente para ajudar a simplificar o entendimento do código
       @delay = tempo em ms que vai levar para ele trocar os valores
     */
-    toogleDelay delay {
+    toogleDelay (int delay) {
       digitalWrite(.trig, HIGH);
       delayMicroseconds(delay);
       digitalWrite(.trig, LOW);

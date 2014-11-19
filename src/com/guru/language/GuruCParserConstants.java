@@ -97,15 +97,19 @@ public interface GuruCParserConstants {
   /** RegularExpression Id. */
   int FOR = 54;
   /** RegularExpression Id. */
-  int DO = 55;
+  int NEW = 55;
   /** RegularExpression Id. */
-  int EXTENDS = 56;
+  int DO = 56;
   /** RegularExpression Id. */
-  int IDENTIFIER = 57;
+  int EXTENDS = 57;
   /** RegularExpression Id. */
-  int LETTER = 58;
+  int VISIBILITY = 58;
   /** RegularExpression Id. */
-  int DIGIT = 59;
+  int IDENTIFIER = 59;
+  /** RegularExpression Id. */
+  int LETTER = 60;
+  /** RegularExpression Id. */
+  int DIGIT = 61;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -169,8 +173,10 @@ public interface GuruCParserConstants {
     "\"char\"",
     "\"goto\"",
     "\"for\"",
+    "\"new\"",
     "\"do\"",
     "\"extends\"",
+    "<VISIBILITY>",
     "<IDENTIFIER>",
     "<LETTER>",
     "<DIGIT>",

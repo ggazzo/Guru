@@ -7,16 +7,20 @@ public class MethodConstructor {
 	private String identifier, params, returns;
 	private ArrayList<Statement> statements = new ArrayList<Statement>();
 	private Iterator<Statement> iter1;
+	private int level = 0;
+	
 	public MethodConstructor(String identifier,String params,String returns) {
 		this.identifier = identifier;
 		this.params = params;
 		this.returns = returns;			
 		System.out.println(identifier);
 	}
+	
 	public void addStatement(String a){
 		System.out.println("linha de código, metodo "+identifier);
 		statements.add(new Statement(a));
 	}
+	
 	public String toHeader(){				
 		// Fiz assim para ficar mais facil de notar a estrutura <3
 		String template = "%returns% %name% (%params%);";
@@ -25,15 +29,15 @@ public class MethodConstructor {
 		
 		return this.replaceToHeader(template);				
 	}
+	
 	public String toImplementation(){
 		// Fiz assim para ficar mais facil de notar a estrutura <3
 		
-
 		String template = "%returns% %class%::%name% (%params%){ %statements% }";
 		
 		System.out.println("gerando o metodo "+identifier);
 				
-		return this.replace(template);	
+		return this.replace(template);
 		
 	}
 	
@@ -44,7 +48,6 @@ public class MethodConstructor {
 			retorno+= "\n" + iter1.next();
 		}
 		return retorno + '\n';
-		
 	}
 	
 	private String replace(String t){
@@ -53,6 +56,7 @@ public class MethodConstructor {
 				.replace("%statements%", this.statementToString())
 				.replace("%params%" ,params.equals("void")?"":params);		
 	}
+	
 	private String replaceToHeader(String t){
 		return t.replace("%returns% " ,returns!=null ? returns+" ":"" )
 				.replace("%name%" ,identifier)

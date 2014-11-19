@@ -1,7 +1,16 @@
+
+/* Código gerado automaticamente pelo GuruParser*/
 #ifndef TESTE_H
 #define TESTE_H
 class Teste {
-  Teste(void);
-  void exec(void);
+    public:
+        int a;
+
+        virtual ~Teste (void);
+        virtual Teste (void);
+        virtual Teste (int a);
+    private:
+
+        virtual Teste (void);
 }
 #endif

@@ -4,7 +4,8 @@ import java.util.*;
 import com.guru.generator.*; 
   
   public class GuruCParser{
-	private static Classes classes = new Classes();
+
+    private static Classes classes = new Classes();
 
     // Hastable for storing typedef types
     private static Set types = new HashSet();
@@ -158,9 +159,10 @@ TOKEN : {
 	<GOTO: "goto"> |
 	<FOR: "for"> |
 //	<INT: "int"> |
-	
+	<NEW: "new"> |
 	<DO: "do"> |
-	<EXTENDS : "extends" >
+	<EXTENDS : "extends" >|
+        <VISIBILITY:("private"|"public"|"protected")>
 }
 
 TOKEN : {
@@ -194,24 +196,28 @@ void MemberDeclaration() : {String s;}
 	attributos
 	metodos
   */
-LOOKAHEAD(attributos())
-	attributos()
+LOOKAHEAD(4)
+construtores()
+|LOOKAHEAD(4)	attributos()
 | 	metodos()
-| 	construtores()
+
 
 }
 
-void construtores():{String params;}
+void construtores():{String params,s;Token t= null;}
 {
-  LOOKAHEAD(2)
-  "("")"{
-    classes.get().addConstructor();
-  }CompoundStatement()
+    [t = <VISIBILITY>]
+  (LOOKAHEAD(2)
+  {
+    classes.get().addConstructor(t!= null?t.toString():"");
+  }s =CompoundStatement()
   
 | "(" params = Parametros()")"{
-    classes.get().addConstructor(params);
-  } CompoundStatement()
-
+    classes.get().addConstructor(params,t!= null?t.toString():"");
+  }s= CompoundStatement()
+){
+  classes.get().addStatement(s);
+}
 }
 
 void metodos():{}
@@ -223,34 +229,37 @@ void metodos():{}
 
 }
 
-void metodos_com_parametros():{Token t,t2;String params,s;}
+void metodos_com_parametros():{Token t,t2,v= null;String params,s;}
 {
+
+    [v = <VISIBILITY>]
 (
     LOOKAHEAD(2)
   t= <IDENTIFIER> "("params = Parametros()")" {
-  	classes.get().addMethodWithParams(t.toString(), params);
+  	classes.get().addMethodWithParams(t.toString(), params,v!= null?v.toString():"");
 	} s = CompoundStatement()
 | t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
-  classes.get().addMethod(t2.toString(),params,t.toString());
+  classes.get().addMethod(t2.toString(),params,t.toString(),v!= null?v.toString():"");
 
 	} s = CompoundStatement()
 ){
   classes.get().addStatement(s);
 }
 }
-void metodos_sem_parametros():{Token t,t2;String s;}
+void metodos_sem_parametros():{Token t,t2,v=null;String s;}
 {
+[v = <VISIBILITY>](
   LOOKAHEAD(2)
   t = <IDENTIFIER> {
-  classes.get().addMethod(t.toString());
+  classes.get().addMethod(t.toString(),v!= null?v.toString():"");
 } s = CompoundStatement(){
   classes.get().addStatement(s);
 }
 | t = <IDENTIFIER> t2 = <IDENTIFIER> {
-  classes.get().addMethodWithReturn(t2.toString(),t.toString());
+  classes.get().addMethodWithReturn(t2.toString(),t.toString(),v!= null?v.toString():"");
 } s = CompoundStatement() {
   classes.get().addStatement(s);
-}
+})
   
 }
 
@@ -265,12 +274,16 @@ String CompoundStatement() : {String retorno="",s;}
 	  return retorno;
 	}
 }
-String Statement() : {String retorno = "",tmp;}
+String Statement() : {String retorno = "",tmp="";Token t;}
 {
   
-(LOOKAHEAD(2) retorno = Expression() ";"
+(
+
+
+      t = <RETURN> [tmp = Expression()] ";" {retorno = t.toString() +" " +tmp+";";} 		
+|LOOKAHEAD(2) retorno = Expression() ";"
 	{
-	  retorno += ";\n";
+	  retorno += ";";
 	}	
 | 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
 |  	retorno = Variable() "="
@@ -281,7 +294,7 @@ String Statement() : {String retorno = "",tmp;}
 	{
 	  retorno += tmp +";";
 	} ";"
-		
+
 | 	retorno = SelectionStatement()
 | 	retorno = IterationStatement()
 )
@@ -313,19 +326,19 @@ String SelectionStatement() : {Token t;String retorno="",s="",exp="";}
 	(
 	  	t = <IF> "(" exp = Expression() ")" s = CompoundStatement()
 	  	{
-	  	  retorno = t.toString() + "("+exp+")"+ "{\n"+s+"\n}";
+	  	  retorno = t.toString() + "("+exp+")"+ "{\n"+s+"\n}\n";
 	  	}
 	  	( LOOKAHEAD(2) t = <ELSEIF> "(" exp = Expression() ")" s = CompoundStatement()
 	  	{
-	  	  retorno += t.toString() + "("+exp+")"+ "{\n"+s+"\n}";
+	  	  retorno += t.toString() + "("+exp+")"+ "{\n"+s+"\n}\n";
 	  	})* [ LOOKAHEAD(2) t = <ELSE> s = CompoundStatement()
 			{
- 				retorno += t.toString() + "{\n"+s+"\n}";
+ 				retorno += t.toString() + "{\n"+s+"\n}\n";
 			}
 	  	] |
 		t = <SWITCH> "(" exp = Expression() ")" s = CompoundStatement()
 		{
-		  retorno = t.toString() + "("+"){"+s+"}";		   
+		  retorno = t.toString() + "("+"){"+s+"}\n";		   
 		}
 	)
 	{
@@ -487,7 +500,7 @@ String PrefixIncDecExpression() : {Token t1;String tmp1 = "", tmp2="";}
 
 String PostfixIncDecExpression() : {String tmp1,tmp="";Token tmp2;}
 {
-    (tmp1 = InstanceOfExpression()  [(LOOKAHEAD(3)( tmp2 = "++" | tmp2 = "--" ){tmp+=tmp2.toString();})+])
+    (tmp1 = InstanceOfExpression()  [LOOKAHEAD(3)(( tmp2 = "++" | tmp2 = "--" ){tmp+=tmp2.toString();})+])
     { return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp).trim();  }
 }
 
@@ -516,12 +529,14 @@ String PostfixExpression() : {String tmp1,tmp2="",tmp3=null, tmp4;Token t;}
 { return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).trim();  }
 }
 
-String PrimaryExpression() : {String tmp;}
+String PrimaryExpression() : {String tmp="";Token t;}
 {
 
   (tmp = Constant() 
 | "(" tmp = Expression() ")" {tmp = "("+tmp+")";}
+| <NEW> t = <IDENTIFIER> "("[tmp = Parametros()]")"{tmp = "new %class%(%params%)".replace("%class%",t.toString()).replace("%params%",tmp); }
 )
+
 {return tmp.trim();}
 }
 
@@ -578,7 +593,20 @@ String Parametro() : {Token t;String retorno;}
 	}
 }
 
-void attributos():{}
+void attributos():{Token t = null,t1;String tmp ="",tmp2 = "";Attribute a;}
 {  
-  <IDENTIFIER> <IDENTIFIER> [Expression() ] ( "," <IDENTIFIER> [Expression() ]) * ";" // multi
+  
+    [t = <VISIBILITY>]
+    t1 = <IDENTIFIER>
+    { a = classes.get().addAttribute(t1.toString(),t != null? t.toString() :"");}
+    
+    
+    t =  <IDENTIFIER> ["=" tmp = Expression() ]
+    {a.addVariable(t.toString() + (tmp.equals("")? "":" = " + tmp) ); tmp = "";}
+
+    ( "," t =  <IDENTIFIER> ["=" tmp = Expression() ] 
+            {a.addVariable(t.toString() + (tmp.equals("")? "":" = " + tmp)  ); tmp = "";}
+    ) * ";" // multi
+    
+ 
 }

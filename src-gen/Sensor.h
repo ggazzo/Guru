@@ -4,7 +4,7 @@
 #define SENSOR_H
 class Sensor {
     public:
-        int status, trig, echo;
+        int status,  trig,  echo;
 
         virtual ~Sensor (void);
         virtual Sensor (int echo, int trig, int pulse);

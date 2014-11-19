@@ -22,12 +22,12 @@ public final class ClassBuilder {
 
     public ClassBuilder(String name) {
         nameClass = name;
-        methods.put("public", new ArrayList<>());
-        methods.put("private", new ArrayList<>());
-        methods.put("protected", new ArrayList<>());
-        attributes.put("public", new ArrayList<>());
-        attributes.put("private", new ArrayList<>());
-        attributes.put("protected", new ArrayList<>());
+        methods.put("public", new ArrayList<MethodConstructor>());
+        methods.put("private", new ArrayList<MethodConstructor>());
+        methods.put("protected", new ArrayList<MethodConstructor>());
+        attributes.put("public", new ArrayList<Attribute>());
+        attributes.put("private", new ArrayList<Attribute>());
+        attributes.put("protected", new ArrayList<Attribute>());
         destructMethod = addMethod("~%class%".replace("%class%", name), "void", null, "public");
     }
 

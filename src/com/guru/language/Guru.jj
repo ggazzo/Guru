@@ -151,16 +151,18 @@ TOKEN : {
 	<XOR: "xor"> |
 	<NOT: "not"> |
 	<CASE: "case"> |
-//	<LONG: "long"> |
+	<LONG: "long"> |
 	<ENUM: "enum"> |
 	<AUTO: "auto"> |
 	<VOID: "void"> |
 	<CHAR: "char"> |
 	<GOTO: "goto"> |
 	<FOR: "for"> |
-//	<INT: "int"> |
+	<INT: "int"> |
 	<NEW: "new"> |
+        <DELETE: "delete"> |
 	<DO: "do"> |
+        <USE: "use">|
 	<EXTENDS : "extends" >|
         <VISIBILITY:("private"|"public"|"protected")>
 }
@@ -172,7 +174,7 @@ TOKEN : {
 }
 
 void TranslationUnit() : {}
-{
+{    
 	(
 	  ClassDeclaration() // procura classes (:
 	)*
@@ -182,9 +184,9 @@ void TranslationUnit() : {}
 
 void ClassDeclaration() : {Token t;}
 {
-	[t = <IDENTIFIER>{
+	t = <IDENTIFIER> {
 	  classes.addClass(t.toString());
-	}] [<EXTENDS> <IDENTIFIER> ( "," <IDENTIFIER>) * ] ClassMembers()
+	} [<EXTENDS> t= <IDENTIFIER> {classes.get().addExtends(t.toString()); }( "," t= <IDENTIFIER>{classes.get().addExtends(t.toString());    }) * ][<USE> t= <IDENTIFIER> {classes.get().addInclude(t.toString()); }( "," t= <IDENTIFIER>{classes.get().addInclude(t.toString());    }) * ] ClassMembers()
 }
 void ClassMembers() : {}
 {
@@ -197,13 +199,23 @@ void MemberDeclaration() : {String s;}
 	metodos
   */
 LOOKAHEAD(4)
-construtores()
-|LOOKAHEAD(4)	attributos()
-| 	metodos()
+    construtores()
+|   destrutores()
+|LOOKAHEAD(4)
+    attributos()
+|   metodos()
 
 
 }
+void destrutores():{String s;}{
 
+    "~"
+    s = CompoundStatement()
+    {
+        classes.get().createDestructor();
+        classes.get().destructMethod.addStatement(s);
+    }
+}
 void construtores():{String params,s;Token t= null;}
 {
     [t = <VISIBILITY>]
@@ -229,7 +241,7 @@ void metodos():{}
 
 }
 
-void metodos_com_parametros():{Token t,t2,v= null;String params,s;}
+void metodos_com_parametros():{Token t,t2,v= null;String params,s,s1;}
 {
 
     [v = <VISIBILITY>]
@@ -238,15 +250,15 @@ void metodos_com_parametros():{Token t,t2,v= null;String params,s;}
   t= <IDENTIFIER> "("params = Parametros()")" {
   	classes.get().addMethodWithParams(t.toString(), params,v!= null?v.toString():"");
 	} s = CompoundStatement()
-| t= <IDENTIFIER> t2 = <IDENTIFIER> "("params = Parametros()")"{
-  classes.get().addMethod(t2.toString(),params,t.toString(),v!= null?v.toString():"");
+| s1 =Type() t2 = <IDENTIFIER> "("params = Parametros()")"{
+  classes.get().addMethod(t2.toString(),params,s1,v!= null?v.toString():"");
 
 	} s = CompoundStatement()
 ){
   classes.get().addStatement(s);
 }
 }
-void metodos_sem_parametros():{Token t,t2,v=null;String s;}
+void metodos_sem_parametros():{Token t,t2,v=null;String s,s1;}
 {
 [v = <VISIBILITY>](
   LOOKAHEAD(2)
@@ -255,8 +267,8 @@ void metodos_sem_parametros():{Token t,t2,v=null;String s;}
 } s = CompoundStatement(){
   classes.get().addStatement(s);
 }
-| t = <IDENTIFIER> t2 = <IDENTIFIER> {
-  classes.get().addMethodWithReturn(t2.toString(),t.toString(),v!= null?v.toString():"");
+| s1 = Type() t2 = <IDENTIFIER> {
+  classes.get().addMethodWithReturn(t2.toString(),s1,v!= null?v.toString():"");
 } s = CompoundStatement() {
   classes.get().addStatement(s);
 })
@@ -274,29 +286,31 @@ String CompoundStatement() : {String retorno="",s;}
 	  return retorno;
 	}
 }
-String Statement() : {String retorno = "",tmp="";Token t;}
+String Statement() : {String retorno = "",tmp="";Token t,t1=null;}
 {
   
 (
 
 
-      t = <RETURN> [tmp = Expression()] ";" {retorno = t.toString() +" " +tmp+";";} 		
+      t = <RETURN> [tmp = Expression()] ";" {retorno = t.toString() +" " +tmp+";\n";} 		
 |LOOKAHEAD(2) retorno = Expression() ";"
 	{
-	  retorno += ";";
+	  retorno += ";\n";
 	}	
-| 	LOOKAHEAD(2) Variable() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
+| 	LOOKAHEAD(2) Type() Variable() ["=" Expression()]  (LOOKAHEAD(2) "," Variable() ["=" Expression()])*";"
 |  	retorno = Variable() "="
 	{
 	  retorno += " = ";
 	}
 	tmp = Expression()
 	{
-	  retorno += tmp +";";
+	  retorno += tmp +";\n";
 	} ";"
 
 | 	retorno = SelectionStatement()
 | 	retorno = IterationStatement()
+|       t = <CONTINUE> ";" {retorno = t.toString()+";\n";}
+|       t = <DELETE> [t1 = "[]"] tmp = Variable() ";" {retorno = t.toString()+" "+(t1== null?"":t1.toString()+" ")+tmp+";\n";}
 )
 {
   return retorno;
@@ -348,10 +362,10 @@ String SelectionStatement() : {Token t;String retorno="",s="",exp="";}
 String IterationStatement() : {String retorno="",s="",exp="",tmp="";}
 {
 	(<WHILE> "(" exp = Expression() ")" tmp = CompoundStatement() {           
-            retorno = "while ( %exp% ){ %statments% }".replace("%exp%",exp).replace("%statments%",tmp);
+            retorno = "while ( %exp% ){\n%statments%\n}\n".replace("%exp%",exp).replace("%statments%",tmp);
         } |
 	<DO> tmp = CompoundStatement() <WHILE> "(" exp = Expression() ")" EndOfStatement()  {           
-            retorno = " do{ %statments% }while( %exp% );".replace("%exp%",exp).replace("%statments%",tmp);
+            retorno = " do{\n%statments%\n}while( %exp% );\n".replace("%exp%",exp).replace("%statments%",tmp);
         }|
 	<FOR> "(" Expression() ";" Expression() ";" Expression() ")" CompoundStatement()	
         )
@@ -516,7 +530,7 @@ String PostfixExpression() : {String tmp1,tmp2="",tmp3=null, tmp4;Token t;}
 	tmp1 =  PrimaryExpression() 
             (LOOKAHEAD(3)(
             "(" [tmp3 = Argumentos() ]")" {tmp4="(%r%)";}|
-            "." tmp3 = PostfixExpression(){tmp4=".%r%";} | 
+            "." tmp3 = PostfixExpression(){tmp4="->%r%";} | 
             "::" tmp3 = PostfixExpression(){tmp4="::%r%";} |
             "[" [tmp3 = Expression()] "]" {tmp4="[%r%]";}|
             "{" [tmp3 = Expression()] "}" {tmp4="{%r%}";}
@@ -524,9 +538,11 @@ String PostfixExpression() : {String tmp1,tmp2="",tmp3=null, tmp4;Token t;}
                 if(tmp3!=null){
                     tmp2+=tmp4.replace("%r%",tmp3);
                     tmp3=null;
+                }else{
+                    tmp2+=tmp4.replace("%r%","");
                 }
             })*
-{ return "%exp1% %exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).trim();  }
+{ return "%exp1%%exp2%".replace("%exp1%",tmp1).replace("%exp2%",tmp2).trim();  }
 }
 
 String PrimaryExpression() : {String tmp="";Token t;}
@@ -545,10 +561,10 @@ String Constant() : {Token t,t2 = null;String retorno="";}
 	(t = <INTEGER_LITERAL> {retorno = t.toString();}| t = <FLOATING_POINT_LITERAL> {retorno = t.toString();}| retorno = String() | [t2="."] t = <IDENTIFIER> {retorno =(t2!=null?"this->":"")+t.toString();})
         {return retorno.trim();}
 }
-String String() : {}
+String String() : {Token t;}
 {
-  "\"""\""
-{return "TEXTO";}
+  (t = <STRING_LITERAL> | t = <CHARACTER_LITERAL>)
+{return t.toString();}
 }
 
 String Variable() : {Token t;}
@@ -578,11 +594,11 @@ String Parametros() : {String retorno, tmp;}
 	}
 }
 
-String Parametro() : {Token t;String retorno;}
+String Parametro() : {Token t;String retorno,tipo;}
 {
-	t = <IDENTIFIER>
+	tipo = Type()
 	{
-	  retorno = t.toString();
+	  retorno = tipo;
 	}
 	t = <IDENTIFIER>{
 	  retorno += " "+t.toString();
@@ -597,8 +613,8 @@ void attributos():{Token t = null,t1;String tmp ="",tmp2 = "";Attribute a;}
 {  
   
     [t = <VISIBILITY>]
-    t1 = <IDENTIFIER>
-    { a = classes.get().addAttribute(t1.toString(),t != null? t.toString() :"");}
+    tmp = Type()
+    { a = classes.get().addAttribute(tmp,t != null? t.toString() :""); tmp="";}
     
     
     t =  <IDENTIFIER> ["=" tmp = Expression() ]
@@ -607,6 +623,16 @@ void attributos():{Token t = null,t1;String tmp ="",tmp2 = "";Attribute a;}
     ( "," t =  <IDENTIFIER> ["=" tmp = Expression() ] 
             {a.addVariable(t.toString() + (tmp.equals("")? "":" = " + tmp)  ); tmp = "";}
     ) * ";" // multi
-    
- 
+}
+
+String Type():{String s; Token t1;}
+{
+    (s = TypeSpecifier()|t1 = <IDENTIFIER> {s = t1.toString()+" *";})
+    {return s;}
+}
+
+String TypeSpecifier():{Token t;}
+{
+    (t = <LONG>| t = <INT>| t= <CHAR>| t= <DOUBLE>|t= <FLOAT>)
+    {return t.toString();}
 }

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,9 +14,11 @@ public final class ClassBuilder {
 
     private final String nameClass;
     private MethodConstructor lastMethod;
-    private final MethodConstructor destructMethod;
+    public  MethodConstructor destructMethod;
     private final Map<String, ArrayList<MethodConstructor>> methods = new HashMap<>();
     private final Map<String, ArrayList<Attribute>> attributes = new HashMap<>();
+    private final ArrayList<String> includes = new ArrayList<>();
+    private final ArrayList<String> extend = new ArrayList<>();
     private Iterator<MethodConstructor> iter1;
     private Iterator<Attribute> iter2;    
     private int level = 0;
@@ -27,14 +30,13 @@ public final class ClassBuilder {
         methods.put("protected", new ArrayList<MethodConstructor>());
         attributes.put("public", new ArrayList<Attribute>());
         attributes.put("private", new ArrayList<Attribute>());
-        attributes.put("protected", new ArrayList<Attribute>());
-        destructMethod = addMethod("~%class%".replace("%class%", name), "void", null, "public");
+        attributes.put("protected", new ArrayList<Attribute>());        
     }
 
     public MethodConstructor addConstructor(String v) {
         return addMethod(this.nameClass, "void", null, v);
     }
-
+    
     public MethodConstructor addConstructor(String params, String v) {
         return addMethod(this.nameClass, params, null, v);
     }
@@ -73,6 +75,7 @@ public final class ClassBuilder {
         return lastMethod;
     }
 
+    
     public Attribute addAttribute(String type, String visibility) {
         Attribute a = this.findAttributeByType(this.attributes.get(visibility.equals("") ? "public" : visibility), type);
         
@@ -92,8 +95,16 @@ public final class ClassBuilder {
         return a;
     
     }
-
+    public void createDestructor(){
+        destructMethod = (destructMethod != null ? destructMethod : addMethod("~%class%".replace("%class%", this.nameClass), "void", null, "public"));
+    }
     public void build() throws IOException {
+        if(destructMethod==null){
+            createDestructor();
+        }
+        Collections.sort(methods.get("public"));
+        Collections.sort(methods.get("private"));
+        Collections.sort(methods.get("protected"));
         makeHeader();
         makeImplementation();
     }
@@ -109,14 +120,49 @@ public final class ClassBuilder {
             System.out.println("criado o arquivo:" + f.getName());
 
             write(fw, "/* Código gerado automaticamente pelo GuruParser*/");
-            write(fw, "#include %class%.h");
-
+            write(fw, "#include %class%.h");            
             writeMethods("public", fw);
             writeMethods("private", fw);
             writeMethods("protected", fw);
         }
     }
+    
+    public void addInclude(String name){
+        this.includes.add(name);
+    }  
+    public void addExtends(String name){
+        this.extend.add(name);
+    }  
+    
+    
+    
+    private void writeIncludes( FileWriter fw) throws IOException {
+        
+        for (Iterator<String> iterator = includes.iterator(); iterator.hasNext();) {
+            write(fw,"#include \"" + iterator.next()+".h\"");
+            
+        }
+        
 
+    }
+    private String writeExtends( ){
+        String ext = ": ";
+        Iterator<String> iterator = extend.iterator();
+        if(includes.isEmpty()){
+            return "";
+        }
+        while ( iterator.hasNext()) {
+            ext += "public " + iterator.next();
+            if(iterator.hasNext()){
+                ext += ", ";
+            }
+        }
+        
+        return ext;
+        
+
+    }
+    
     private void writeMethods(String v, FileWriter fw) throws IOException {
         iter1 = methods.get(v).iterator();
         while (iter1.hasNext()) {
@@ -134,18 +180,20 @@ public final class ClassBuilder {
         iter1 = methods.get(v).iterator();
         iter2 = attributes.get(v).iterator();
         
-        write(fw, "    " + v + ":");
+        write(fw,v + ":");
         
         while (iter2.hasNext()) {
-            write(fw, "        " + iter2.next().toString());
+            write(fw, "    " + iter2.next().toString());
         }
 
-        write(fw, "");
+        if(attributes.get(v).isEmpty() == false){
+            write(fw, "");
+        }
         
         
         
         while (iter1.hasNext()) {
-            write(fw, "        virtual " + iter1.next().toHeader());
+            write(fw, "    " + iter1.next().toHeader());
         }
         
         
@@ -158,44 +206,41 @@ public final class ClassBuilder {
         f.createNewFile();
         System.out.println("criado o arquivo:" + f.getName());
 
-        FileWriter fw = new FileWriter(f);
-
-        /* \/* Código gerado automaticamente pelo GuruParser*\/
-         * #ifndef %CLASS%
-         * #define %CLASS%
-         * class %class {
-         *  public:
-         *      .
-         *      .         
-         *  private:        
-         *      .        
-         *      .          
-         *  protected:
-         *      .        
-         *      .          
-         * }
-         * #endif
-         */
-        write(fw, "/* Código gerado automaticamente pelo GuruParser*/");
-
-        write(fw, "#ifndef %CLASS%_H");
-        write(fw, "#define %CLASS%_H");
-        write(fw, "class %class% {");
-        writeSignature("public", fw);
-        writeSignature("private", fw);
-        writeSignature("protected", fw);
-        write(fw, "}");
-        write(fw, "#endif");
-
-        fw.close();
+        try (FileWriter fw = new FileWriter(f)) {
+            /* \/* Código gerado automaticamente pelo GuruParser*\/
+            * #ifndef %CLASS%
+            * #define %CLASS%
+            * class %class {
+            *  public:
+            *      .
+            *      .
+            *  private:
+            *      .
+            *      .
+            *  protected:
+            *      .
+            *      .
+            * }
+            * #endif
+            */
+            write(fw, "/* Código gerado automaticamente pelo GuruParser*/");            
+            write(fw, "#ifndef %CLASS%_H");
+            write(fw, "#define %CLASS%_H");
+            writeIncludes(fw);
+            write(fw, "class %class%%extends%{".replace("%extends%",writeExtends()));
+            writeSignature("public", fw);
+            writeSignature("private", fw);
+            writeSignature("protected", fw);
+            write(fw, "};");
+            write(fw, "#endif");
+        }
 
     }
 
     private void write(FileWriter fw, String str) throws IOException {
         String tab = "";
         str = str.replace("%class%", this.nameClass);
-        str = str.replace("%CLASS%", this.nameClass.toUpperCase());
-
+        str = str.replace("%CLASS%", this.nameClass.toUpperCase());        
         String[] lines = str.split("\n");
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].contains("}")) {
@@ -222,4 +267,5 @@ public final class ClassBuilder {
     public String toString() {
         return "";
     }
+
 }

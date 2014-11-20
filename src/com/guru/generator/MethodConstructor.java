@@ -3,8 +3,8 @@ package com.guru.generator;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class MethodConstructor {
-	private String identifier, params, returns;
+public class MethodConstructor implements Comparable{
+	public String identifier, params, returns;
 	private ArrayList<Statement> statements = new ArrayList<Statement>();
 	private Iterator<Statement> iter1;
 	private int level = 0;
@@ -33,11 +33,11 @@ public class MethodConstructor {
 	public String toImplementation(){
 		// Fiz assim para ficar mais facil de notar a estrutura <3
 		
-		String template = "%returns% %class%::%name% (%params%){ %statements% }";
+		String template = "\n%returns% %class%::%name% (%params%){%statements%}";
 		
 		System.out.println("gerando o metodo "+identifier);
 				
-		return this.replace(template);
+		return this.replace(template).replaceAll("( )*\n}","}");
 		
 	}
 	
@@ -58,8 +58,13 @@ public class MethodConstructor {
 	}
 	
 	private String replaceToHeader(String t){
-		return t.replace("%returns% " ,returns!=null ? returns+" ":"" )
+		return t.replace("%returns% " ,returns!=null ? "virtual "+returns+" ":"" )
 				.replace("%name%" ,identifier)
 				.replace("%params%" ,params);		
 	}
+    
+    @Override
+    public int compareTo(Object t) {
+        return this.identifier.compareTo(((MethodConstructor)t).identifier);
+    }
 }

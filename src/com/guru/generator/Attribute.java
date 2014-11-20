@@ -6,6 +6,7 @@
 package com.guru.generator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -24,7 +25,7 @@ public class Attribute {
     }
     public String toString(){
         String retorno = this.type;
-        
+        Collections.sort(variables);
         for (Iterator<String> iterator = variables.iterator(); iterator.hasNext();) {
             String next = iterator.next();
             retorno += " "+next;

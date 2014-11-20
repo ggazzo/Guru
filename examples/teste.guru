@@ -1,29 +1,66 @@
+Morse
+{
+    private int _pin;
+    
+    (int pin)
+    {
+        pinMode(pin, OUTPUT);
+        ._pin = pin;                         
+    }
+    
+    dot
+    {
+      digitalWrite(._pin, HIGH);
+      delay(250);      
+      digitalWrite(._pin, LOW);
+        
+      delay(250);  
+    }
+
+    dash
+    {
+      digitalWrite(._pin, HIGH);
+      delay(1000);
+      digitalWrite(._pin, LOW);
+      delay(250);
+    }    
+}
+
+
+
 A {
     int a = 1, b;
     int c;
-
-    private int d;
+    // construtor
     {
         .a = 0;
     }
-    make {
+
+    private int d;
+    int fazUmaCoisa(int a){
+        .a=2;
+    }
+    fazOutraCoisa {
         .a=1;
     }
 }
 
 
-Teste {
-    int a;
+B {
+    A a;
 
    {
-        .a = new Teste();
+        .a = new A();
+        .a.fazUmaCoisa(a);
    }
     (int a){ 
-    .a = new benga();
+        .a = new benga();
     }
 
     private {
-        a = 1;
+        .a = 1;
+    }
+    func1 {
     }
 
 }

@@ -85,31 +85,39 @@ public interface GuruCParserConstants {
   /** RegularExpression Id. */
   int CASE = 48;
   /** RegularExpression Id. */
-  int ENUM = 49;
+  int LONG = 49;
   /** RegularExpression Id. */
-  int AUTO = 50;
+  int ENUM = 50;
   /** RegularExpression Id. */
-  int VOID = 51;
+  int AUTO = 51;
   /** RegularExpression Id. */
-  int CHAR = 52;
+  int VOID = 52;
   /** RegularExpression Id. */
-  int GOTO = 53;
+  int CHAR = 53;
   /** RegularExpression Id. */
-  int FOR = 54;
+  int GOTO = 54;
   /** RegularExpression Id. */
-  int NEW = 55;
+  int FOR = 55;
   /** RegularExpression Id. */
-  int DO = 56;
+  int INT = 56;
   /** RegularExpression Id. */
-  int EXTENDS = 57;
+  int NEW = 57;
   /** RegularExpression Id. */
-  int VISIBILITY = 58;
+  int DELETE = 58;
   /** RegularExpression Id. */
-  int IDENTIFIER = 59;
+  int DO = 59;
   /** RegularExpression Id. */
-  int LETTER = 60;
+  int USE = 60;
   /** RegularExpression Id. */
-  int DIGIT = 61;
+  int EXTENDS = 61;
+  /** RegularExpression Id. */
+  int VISIBILITY = 62;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 63;
+  /** RegularExpression Id. */
+  int LETTER = 64;
+  /** RegularExpression Id. */
+  int DIGIT = 65;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -167,14 +175,18 @@ public interface GuruCParserConstants {
     "\"xor\"",
     "\"not\"",
     "\"case\"",
+    "\"long\"",
     "\"enum\"",
     "\"auto\"",
     "\"void\"",
     "\"char\"",
     "\"goto\"",
     "\"for\"",
+    "\"int\"",
     "\"new\"",
+    "\"delete\"",
     "\"do\"",
+    "\"use\"",
     "\"extends\"",
     "<VISIBILITY>",
     "<IDENTIFIER>",
@@ -183,10 +195,12 @@ public interface GuruCParserConstants {
     "\",\"",
     "\"{\"",
     "\"}\"",
+    "\"~\"",
     "\"(\"",
     "\")\"",
     "\";\"",
     "\"=\"",
+    "\"[]\"",
     "\"+=\"",
     "\"-=\"",
     "\"*=\"",
@@ -221,14 +235,12 @@ public interface GuruCParserConstants {
     "\"*\"",
     "\"/\"",
     "\"%\"",
-    "\"~\"",
     "\"!\"",
     "\"++\"",
     "\"--\"",
     "\"::\"",
     "\"[\"",
     "\"]\"",
-    "\"\\\"\"",
   };
 
 }
